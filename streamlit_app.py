@@ -1,18 +1,12 @@
 import streamlit as st
 import sqlite3
 
-st.title("Burger Company")
-st.markdown("### Best Burgers in Town One Click Away")
-
 @st.cache_resource
 def get_connection():
     return sqlite3.connect("transaction.db", check_same_thread=False)
 
 conn = get_connection()
 cursor = conn.cursor()
-
-# Create Table
-
 
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS customers (
@@ -39,15 +33,15 @@ cursor.execute("""
 
 conn.commit()
 
+st.title("Burger App :hamburger:")
+st.markdown("### Best Burgers in Town, One Click Away 🍟😋")
+
 phone = st.text_input("Phone Number ? ")
 
 if phone:
-    #Check validity
     if not phone.isdigit() or len(phone) != 10:
         st.error("Please enter a valid 10 digit phone number")
-    
     else:
-        #check customer
         cursor.execute(
             """
             SELECT customer_id, name from customers WHERE phone=?
@@ -57,16 +51,12 @@ if phone:
         customer = cursor.fetchone()
 
         if customer:
-             st.write(f"Welcome Back! {customer[1]}")
+            st.write(f"Welcome Back! {customer[1]}")
         else:
             name = st.text_input("Your Name ?")
             age = st.selectbox("Age Group",[ "Under 13","13-17","18-25","26-35","36-50","50+"])
 
-
-
-# print(cursor.fetchall())
-
-st.text("Menu")
+st.text("📋 Menu")
 
 col1,col2,col3 = st.columns(3)
 
@@ -97,7 +87,6 @@ with col6:
     st.image("https://images.pexels.com/photos/15476368/pexels-photo-15476368.jpeg",width=200)
     VegBurg_count = st.number_input("Veggie Veg Burger@ 90",min_value=0,max_value=10,step=1,key="vegburger")
 
-
 menu_items={
     "Company Burgers": Burger_count,
     "Frenchie Fries": Fries_count,
@@ -108,7 +97,7 @@ menu_items={
 }
 
 prices = {
-     "Company Burgers": 120,
+    "Company Burgers": 120,
     "Frenchie Fries": 100,
     "Nuggets of Chicken": 180,
     "Coke Ka Cola": 100,
@@ -123,9 +112,10 @@ for item_name,count in menu_items.items():
         items.extend([item_name] * count)
 
 
-st.write(items)
+st.write(f"🛒 Cart : ({len(items)} items :arrow_down: )",items)
 
-st.write("Order Summary")
+
+st.markdown(" ##  :memo: Order Summary")
 amt = 0
 for item_name,count in menu_items.items():
     if count>=1:
@@ -136,63 +126,6 @@ for item_name,count in menu_items.items():
 st.write(f"Total Amount: {amt} ")
 
 
-if st.button("Place Order"):
-
-    if not phone:
-        st.warning("Please Login with Phone No First")
-
-    elif len(items)==0:
-        st.warning("Please select something first")
-
-    elif not customer and not name:
-        st.warning("Please enter you name first")
-
-    else:
-        
-        #check customer
-        cursor.execute(
-            """
-            SELECT customer_id, name from customers WHERE phone=?
-            """,(phone,)
-        )
-
-        customer = cursor.fetchone()
-
-        if customer:
-            #existing customer
-            customer_id = customer[0]
-            st.success(f"Always happy to serve you {customer[1]}!")
-        else:
-            #new customer
-            cursor.execute(
-                """
-                INSERT INTO customers(name, phone, age_group)
-                VALUES(?,?,?)
-                """,(name,phone,age)
-            )
-            conn.commit()
-
-            customer_id = cursor.lastrowid
-            st.success(f"Will be ready with your order {name}!")
-
-        #Create Order
-
-        cursor.execute(
-        """
-        INSERT INTO orders (customer_id,items,total_amount) VALUES (?,?,?)
-
-        """ , (customer_id,",".join(items),amt)
-        )
-        conn.commit()
-
-        order_id = cursor.lastrowid
-
-        st.success(f"Thanks for Ordering! Your Order No: {order_id} ")
 
 
-
-    
-    
-
-
-
+st.button("Order Now")
